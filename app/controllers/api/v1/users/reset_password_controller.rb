@@ -6,8 +6,6 @@ module Api
         before_action :require_promo_code, except: [:create]
         after_action :verify_authorized, only: []
 
-        RESET_TOKEN_VALID_DURATION = -> { 2.hours }
-
         api :POST, '/users/reset-password/', 'Reset password'
         description 'Sends a reset password email to user.'
         error code: 422, desc: 'Unprocessable entity'
@@ -23,7 +21,7 @@ module Api
           user = User.find_by_email_or_phone(email_or_phone)
 
           if user
-            user.generate_one_time_token(valid_duration: RESET_TOKEN_VALID_DURATION.call)
+            user.generate_one_time_token(:reset_password)
             user.save!
             ResetPasswordNotifier.call(user: user)
           end

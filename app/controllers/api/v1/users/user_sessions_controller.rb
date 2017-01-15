@@ -73,7 +73,7 @@ module Api
         description 'Resets the Users auth token if the user is allowed.'
         error code: 404, desc: 'Not found'
         def destroy
-          token = Token.find_by(token: params[:id])
+          token = Token.auth.find_by(token: params[:id])
           if token
             token.destroy!
 
@@ -94,8 +94,7 @@ module Api
           user = User.find_by_email_or_phone(email_or_phone)
 
           if user
-            user.generate_one_time_token
-            user.save!
+            user.generate_one_time_token(:magic_link)
             MagicLoginLinkNotifier.call(user: user)
           end
 
@@ -107,7 +106,7 @@ module Api
         private
 
         def user_from_token
-          User.find_by_one_time_token(jsonapi_params[:one_time_token])
+          User.find_by_one_time_token(:magic_login, jsonapi_params[:one_time_token])
         end
 
         def user_from_credentials

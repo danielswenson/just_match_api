@@ -252,6 +252,7 @@ RSpec.describe User, type: :model do
     expect(User::MIN_PASSWORD_LENGTH).to eq(6)
   end
 
+  # TODO: FIX!
   describe '#generate_one_time_token' do
     let(:user) { FactoryGirl.build(:user) }
 
@@ -275,23 +276,23 @@ RSpec.describe User, type: :model do
     context 'token still valid' do
       it 'finds and returns user' do
         user = FactoryGirl.create(:user)
-        user.generate_one_time_token
+        user.generate_one_time_token(:magic_login)
         user.save!
 
         token = user.one_time_token
-        expect(User.find_by_one_time_token(token)).to eq(user)
+        expect(User.find_by_one_time_token(:magic_login, token)).to eq(user)
       end
     end
 
     context 'token expired' do
       it 'returns nil' do
         user = FactoryGirl.create(:user)
-        user.generate_one_time_token
+        user.generate_one_time_token(:magic_login)
         user.save!
 
         token = user.one_time_token
         Timecop.freeze(Time.zone.today + 30) do
-          expect(User.find_by_one_time_token(token)).to be_nil
+          expect(User.find_by_one_time_token(:magic_login, token)).to be_nil
         end
       end
     end

@@ -151,7 +151,7 @@ RSpec.describe Api::V1::Users::UserSessionsController, type: :controller do
     context 'login with one time token' do
       let(:user) do
         u = FactoryGirl.create(:user)
-        u.generate_one_time_token
+        u.generate_one_time_token(:magic_login)
         u.save!
         u
       end
@@ -159,7 +159,7 @@ RSpec.describe Api::V1::Users::UserSessionsController, type: :controller do
         {
           data: {
             attributes: {
-              one_time_token: user.one_time_token
+              one_time_token: user.magic_login_token
             }
           }
         }

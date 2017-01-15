@@ -129,8 +129,8 @@ class User < ApplicationRecord
     [:by_near_address]
   end
 
-  def self.find_by_one_time_token(token)
-    valid_one_time_tokens.find_by(one_time_token: token)
+  def self.find_by_one_time_token(category, token)
+    auth_tokens.not_expired.find_by(category: category, token: token)&.user
   end
 
   def self.find_by_credentials(email_or_phone:, password:)
@@ -271,7 +271,11 @@ class User < ApplicationRecord
   end
 
   def auth_token
-    auth_tokens.last&.token
+    auth_tokens.not_expired.login.last&.token
+  end
+
+  def magic_login_token
+    auth_tokens.not_expired.magic_login.first
   end
 
   def set_normalized_phone
@@ -358,14 +362,16 @@ class User < ApplicationRecord
   end
 
   def create_auth_token
-    token = Token.new
+    token = Token.new(category: :login)
     auth_tokens << token
     token
   end
 
-  def generate_one_time_token(valid_duration: ONE_TIME_TOKEN_VALID_FOR_HOURS.hours)
-    self.one_time_token_expires_at = Time.zone.now + valid_duration
-    self.one_time_token = SecureGenerator.token
+  def generate_one_time_token(category, valid_duration: ONE_TIME_TOKEN_VALID_FOR_HOURS.hours) # rubocop:disable Metrics/LineLength
+    token = Token.find_or_initialize_by(category: category, user: self)
+    token.expires_at = Time.zone.now + valid_duration
+    token.save!
+    token
   end
 
   def self.valid_password_format?(password)

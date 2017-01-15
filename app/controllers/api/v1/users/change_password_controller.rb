@@ -35,7 +35,7 @@ module Api
           end
 
           if User.valid_password_format?(new_password)
-            @user.generate_one_time_token
+            @user.generate_one_time_token(:reset_password)
             @user.password = new_password
             @user.save!
 
@@ -57,7 +57,7 @@ module Api
                     current_user
                   else
                     token = jsonapi_params[:one_time_token]
-                    token_user = User.find_by_one_time_token(token)
+                    token_user = User.find_by_one_time_token(:reset_password, token)
                     raise ActiveRecord::RecordNotFound if token_user.nil?
                     token_user
                   end
